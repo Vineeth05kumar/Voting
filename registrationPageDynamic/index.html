@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Monitor Voting</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #candidates {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    #votes {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    #totalVotes {
+      margin-top: 20px;
+    }
+
+    .candidateVotes {
+      margin-top: 10px;
+    }
+
+    .voterList {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .voterItem {
+      list-style: none;
+      margin-bottom: 5px;
+      padding: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .deleteButton {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Class Monitor Voting</h1>
+
+  <form id="votingForm">
+    <label for="username">Your Name:</label>
+    <input type="text" id="username" required>
+
+    <label for="candidates">Choose Candidate:</label>
+    <select id="candidates" required>
+      <option value="candidate1">Candidate 1</option>
+      <option value="candidate2">Candidate 2</option>
+      <option value="candidate3">Candidate 3</option>
+    </select>
+
+    <button type="button" onclick="submitVote()">Submit Vote</button>
+  </form>
+
+  <div id="votes">
+    <div id="candidate1Votes" class="candidateVotes">Candidate 1 Votes: 0</div>
+    <div id="candidate2Votes" class="candidateVotes">Candidate 2 Votes: 0</div>
+    <div id="candidate3Votes" class="candidateVotes">Candidate 3 Votes: 0</div>
+  </div>
+
+  <div id="totalVotes">Total Votes: 0</div>
+
+  <div class="voterList">
+    <h3>Voter List</h3>
+    <ul id="voterListCandidate1"></ul>
+    <ul id="voterListCandidate2"></ul>
+    <ul id="voterListCandidate3"></ul>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+  <script>
+    // Initialize vote counts
+    let candidateVotes = {
+      candidate1: 0,
+      candidate2: 0,
+      candidate3: 0
+    };
+
+    function submitVote() {
+      const username = document.getElementById("username").value;
+      const selectedCandidate = document.getElementById("candidates").value;
+
+      // Update vote count
+      candidateVotes[selectedCandidate]++;
+
+      // Display individual candidate votes
+      document.getElementById(`candidate1Votes`).innerText = `Candidate 1 Votes: ${candidateVotes.candidate1}`;
+      document.getElementById(`candidate2Votes`).innerText = `Candidate 2 Votes: ${candidateVotes.candidate2}`;
+      document.getElementById(`candidate3Votes`).innerText = `Candidate 3 Votes: ${candidateVotes.candidate3}`;
+
+      // Display total votes
+      const totalVotes = candidateVotes.candidate1 + candidateVotes.candidate2 + candidateVotes.candidate3;
+      document.getElementById("totalVotes").innerText = `Total Votes: ${totalVotes}`;
+
+      // Store voter details using Axios and Crud-Crud
+      axios
+        .post(
+          "https://crudcrud.com/api/c6a890f505424d5bb82654cdcf5c38aa/voterDetails",
+          {
+            username,
+            selectedCandidate,
+          }
+        )
+        .then(() => {
+          // Display voter's name under the selected candidate
+          const voterList = document.getElementById(`voterList${selectedCandidate}`);
+          const voterItem = document.createElement("li");
+          voterItem.className = "voterItem";
+          voterItem.innerHTML = `
+            <span>${username}</span>
+            <button class="deleteButton" onclick="deleteVote('${username}', '${selectedCandidate}')">Delete</button>
+          `;
+          voterList.appendChild(voterItem);
+
+          alert(`Thank you, ${username}! Your vote for ${selectedCandidate} has been recorded.`);
+        })
+        .catch((error) => {
+          console.log(error);
+          alert("Failed to store voter details. Please try again.");
+        });
+    }
+
+    function deleteVote(username, selectedCandidate) {
+      // Delete voter details using Axios and Crud-Crud
+      axios
+        .delete(
+          `https://crudcrud.com/api/c6a890f505424d5bb82654cdcf5c38aa/voterDetails?username=${username}&selectedCandidate=${selectedCandidate}`
+        )
+        .then(() => {
+          // Remove voter's name from the list
+          const voterList = document.getElementById(`voterList${selectedCandidate}`);
+          const voterItem = Array.from(voterList.getElementsByClassName("voterItem")).find(item => item.innerText.includes(username));
+          if (voterItem) {
+            voterList.removeChild(voterItem);
+          }
+
+          alert(`Your vote has been deleted. You can now re-vote.`);
+        })
+        .catch((error) => {
+          console.log(error);
+          alert("Failed to delete voter details. Please try again.");
+        });
+    }
+  </script>
+
+</body>
+</html>
